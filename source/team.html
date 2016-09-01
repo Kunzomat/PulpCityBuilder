@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+<title>Pulp City Team Builder</title>
+
+<link href="team_style.css" rel="stylesheet" type="text/css">
+
+<script src="alasql/alasql.min.js"></script>
+<script src="team.js"></script>   
+<script>
+	//console.table(alasql("SELECT * FROM supremes"));
+	//console.table(alasql("SELECT * FROM minions"));   
+
+</script>
+		
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+<script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+
+<script type="text/javascript">
+
+	current_card="2";
+	current_shape="0";
+	current_member="";
+	current_team="";
+	current_faction="";
+	
+function generateUUID() {
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+    });
+    return uuid;
+};
+
+function addMemberToList(uuid, member, error) {
+    $('#member_list').prepend('<li id=member_'+uuid+'  class="'+error+'"><div class="list-item"><div class="list-item-removeicon"><img class="removeicon" id="'+uuid+'" src="removeicon.png" width="36" height="36" alt="" border="0"></div><div id="open_member_'+uuid+'" class="list-item-body"><div class="list-item-desc"><div><b>'+member.name+'</b></div><div>'+member.role+'</div></div><div class="list-item-level"><div>Level</div><div class="level-number">'+member.level+'</div></div></div></div></li>');
+    $(".removeicon#"+uuid).on("click", function() { removeMember(jQuery(this).attr("id"));	});
+	$("#open_member_"+uuid).on("click", function(){
+	    $('#member_'+current_member).removeClass("active");
+		current_member = member.uuid;
+		$('#member_'+current_member).addClass("active");
+	    updateCardView(current_member, current_card, current_shape);
+		$('#member_page').switchClass("left", "right", 0);
+		$('#team_page').switchClass("center", "left", 1000, "easeOutExpo");
+		$('#member_page').switchClass("right", "center", 1000, "easeOutExpo");
+	});
+}
+
+function addMember(member_id) {
+    var uuid = generateUUID();
+	alasql("INSERT INTO pulp_city_db.team_members VALUES ('"+uuid+"', '"+current_team+"', '"+member_id+"')");
+	$("#submenu-new-member").slideUp();
+	$("#nenuitem-new-member").removeClass("active");
+	switchToTeamView(current_team);
+	updateTeamList(current_team);
+}
+
+function removeMember(member_id){
+    alasql("DELETE FROM pulp_city_db.team_members WHERE id='"+member_id+"'"); 
+	switchToTeamView(current_team);
+	updateTeamList(current_team);
+}
+
+function removeTeam(team_id){
+    alasql("DELETE FROM pulp_city_db.team_members WHERE team_id='"+team_id+"'");
+	alasql("DELETE FROM pulp_city_db.teams WHERE id='"+team_id+"'"); 
+    $("#team_"+team_id).remove();
+}
+
+function switchToTeamView(team_id) {
+	current_team = team_id;
+	var team = getTeam(team_id);
+	
+	// show member list
+	$('#member_list').empty();
+	for (var minion of team.minions) {
+		addMemberToList(minion.uuid, minion, "minion_member");
+	}
+	for (var member of team.supremes) {
+		if (!isFactionMember(member.id, team.faction_id, team.supremes)) {
+		  addMemberToList(member.uuid, member, "error");
+		}
+		else {
+		  addMemberToList(member.uuid, member, "");
+		}
+	}
+	
+	//$('#minion_list').show();
+	
+	//show team overview
+	updateTeamOverview(team);
+	//$('#team-overview').show();
+	if (!$('#team_page').hasClass("center")) {
+		$('#team_page').switchClass("left", "right", 0);
+		$('#main_page').switchClass("center", "left", 1000, "easeOutExpo");
+		$('#team_page').switchClass("right", "center", 1000, "easeOutExpo");
+	}
+}
+
+function switchToMainView() {
+	current_team = "";
+    $('#nenuitem-new-team').show();
+	$('#nenuitem-new-supreme').show();
+	$('#nenuitem-new-minion').show();
+	$('#nenuitem-new-card').show();
+	$('#submenu-new-team').hide();
+	$('#submenu-new-supreme').hide();
+	$('#submenu-new-minion').hide();
+	$('#submenu-new-card').hide();
+	$('#team_list').show();
+	$('#supreme_list').show();
+	$('#minion_list').show();
+	$('#team-overview').show();
+	updateTeamList();	
+	if (!$('#main_page').hasClass("center")) {
+		//$('#main_page').switchClass("left", "right", 0);
+		$('#team_page').switchClass("center", "right", 1000, "easeOutExpo", function() {$('#team_page').switchClass("right", "left", 0); } );
+		$('#main_page').switchClass("left", "center", 1000, "easeOutExpo");
+	}
+}
+
+function updateFactionMenu() {
+	$('#submenu-new-team').empty();
+	var factions = alasql("SELECT * FROM factions ORDER BY name DESC");
+    for (faction of factions) { $('#submenu-new-team').prepend('<div id="'+faction.id+'" class="faction">'+faction.name+'</div>'); }
+    $(".faction").on("click", function(){
+		$("#submenu-new-team").slideUp();
+		$("#nenuitem-new-team").removeClass("active");
+        current_team = generateUUID();
+    	alasql("INSERT INTO pulp_city_db.teams VALUES ('"+current_team+"', 'Team Name', '"+jQuery(this).attr("id")+"')");
+    	updateTeamList();
+    	switchToTeamView(current_team);
+    });
+}
+
+function isAllowed(item_id, faction_id, members) {
+    var count = 0;
+    for(supreme of members) {
+	    if(item_id == supreme.id) count++;
+	}
+	if (count < 1) return true;
+	var troopers = alasql("SELECT * FROM supreme_troopers WHERE supreme_id = '"+item_id+"'");
+	for (trooper of troopers) {
+		if((trooper.faction_id == faction_id) && (count < 5)) return true;
+	}
+	return false;
+}
+
+function isTeamMember(item_id, members) {
+	for(supreme of members) {
+	    if(item_id == supreme.id) return true;
+	}
+	return false;	 
+}
+
+function isFactionMember(item_id, faction_id, members) {
+    var factions = alasql("SELECT * FROM supreme_factions WHERE supreme_id = '"+item_id+"'");
+	for(var faction of factions) {
+	    if(faction_id == faction.faction_id) return true;
+	}
+	for(var supreme of members) {
+	    var allows = alasql("SELECT * FROM supreme_allows WHERE supreme_id = '"+supreme.id+"'");
+		for(allow of allows) {
+	    	if(item_id == allow.allow_id) return true;
+		}
+	}
+	return false;	 
+}
+
+function isMemberForbid(item_id, members) {
+    var forbids = alasql("SELECT * FROM supreme_forbids WHERE supreme_id = '"+item_id+"'");
+	for (forbid of forbids) {
+	    if (isTeamMember(forbid.forbid_id, members)) return true;
+	}
+	return false;
+}
+
+function updateSupremeMenu(team) {
+	$('#submenu-new-supreme').empty();
+	var supremes = alasql("SELECT * FROM supremes ORDER BY name ASC");
+	for (item of supremes) {
+	    if( isAllowed(item.id, team.faction_id, team.supremes) && isFactionMember(item.id, team.faction_id, team.supremes) && !isMemberForbid(item.id, team.supremes) &&
+		    !((item.role == "POWERHOUSE") && (team.contains_powerhouse))&&
+			!((item.role == "LEADER") && (team.contains_leader))) {
+			
+		    $('#submenu-new-supreme').prepend('<div id="'+item.id+'" class="supreme"><div>'+item.name+'</div><div>Level '+item.level+'</div></div>');
+		}	
+	}
+	$(".supreme").on("click", function(){
+	     $("#submenu-new-supreme").slideUp();
+		 $("#nenuitem-new-supreme").removeClass("active");
+	     addMember(jQuery(this).attr("id"));
+	});	
+}
+
+function updateMinionMenu(team) {
+	$('#submenu-new-minion').empty();
+	var minion_level = team.minion_level_allow - team.minion_level_used;
+	var minions = alasql("SELECT * FROM minions ORDER BY name ASC");
+	for (item of minions) {
+	    var is_allowed = true;
+		var exclusiv = false;
+		var minion_supremes = alasql("SELECT * FROM supreme_exclusiv_minions WHERE minion_id='"+item.id+"'");
+		if(minion_supremes[0] !== undefined) {
+		    for (var minion_supreme of minion_supremes) {
+			    if(isTeamMember(minion_supreme.supreme_id, team.supremes)) exclusiv = true;
+			}
+		}
+	    var minion_factions = alasql("SELECT * FROM minion_factions WHERE minion_id='"+item.id+"'");
+		for (var minion_faction of minion_factions) {
+		    if((minion_faction.faction_id != 'HERO') && (minion_faction.faction_id != 'VILLAIN')) {
+			    if ((team.faction_minions_level_allow[minion_faction.faction_id] === undefined) || (team.faction_minions_level_allow[minion_faction.faction_id] < item.level)) {
+				    is_allowed = false;
+				}		
+			}
+		}
+		if ((item.availability == "1") && isTeamMember(item.id, team.minions)) var unique = false;
+		else var unique = true;
+		
+		var unique 
+		if((((item.level < minion_level) && is_allowed) || exclusiv) && unique) { $('#submenu-new-minion').prepend('<div id="'+item.id+'" class="minion"><div>'+item.name+'</div><div>Level '+item.level+'</div></div>'); }
+		
+	}
+	$(".minion").on("click", function(){
+	    $("#submenu-new-minion").slideUp();
+		$("#nenuitem-new-minion").removeClass("active");
+		addMember(jQuery(this).attr("id"));
+	});
+}
+
+function updateCardMenu() {}
+
+
+function updateTeamList() {
+    $('#team_list').empty();
+	var res = alasql("SELECT * FROM pulp_city_db.teams ORDER BY name");
+	for (var item of res) {
+		var team = getTeam(item.id);
+		$('#team_list').prepend('<li id="team_'+team.id+'"><div class="list-item"><div class="list-item-removeicon"><img class="removeicon" id="'+team.id+'" src="removeicon.png" width="36" height="36" alt="" border="0"></div><div class="list-item-body" id="open_team_'+team.id+'"><div class="list-item-desc"><div><b>'+team.name+'['+team.faction_name+']</b></div><div>Description</div></div><div class="list-item-level"><div>Level</div><div class="level-number">'+team.level+'</div></div></div></div></li>');
+		$(".removeicon#"+item.id).on("click", function() { removeTeam(jQuery(this).attr("id"));	});
+		var item =$("#team_"+item.id);
+		item.on("click", function() {
+			var team_id = jQuery(this).attr("id").replace("team_","");
+		    switchToTeamView(team_id);
+			$("#team_list li").removeClass("active");
+			$("#team_"+team_id).toggleClass("active");
+		});
+	}
+	$("#team_"+current_team).toggleClass("active");
+}
+
+function updateTeamOverview(team) {
+		 $('#team-overview').empty();
+		 $('#team-overview').prepend('<div class="team_overview-icon"><img src="pulpcitylogo.jpg" width="40" height="40" alt="" border="0"/></div><div class="team-overview-body"><div class="team-desc"><div><b>'+team.name+' ['+team.faction_name+']</b></div><div>Team Description</div><div>minions&nbsp;<b>'+team.minion_level_used+'/'+team.minion_level_allow+'</b></div></div><div><div class="team-overview-level"><div>Level</div><div class="level-number">'+team.level+'</div></div><div class="team-overview-applus"><div>AP+</div><div>'+team.applus+'</div></div></div></div>');
+}
+
+function updateCardView(member_uuid, site, shape) {
+		 var member = alasql("SELECT * FROM pulp_city_db.team_members WHERE id = '"+member_uuid+"'");
+		 var shifts = alasql("SELECT * FROM supreme_shifts WHERE supreme_id = '"+member[0].supreme_id+"'");
+		 if (shifts.length < current_shape) current_shape = 0;
+		 if (current_shape == 0)
+		     var card_id = "unit_"+member[0].supreme_id.toLowerCase()+"00"+site;
+	     else
+		     var card_id = "unit_"+shifts[current_shape-1].shift_id.toLowerCase()+"00"+site;
+		 $('#member-card').empty();
+		 $('#member-card').prepend('<img src="cards/'+card_id+'.jpg" width="100%" alt="" border="0"/>');		 
+};
+
+function getTeam(team_id) {
+	var level = 0;
+	var applus = 0;
+	var contains_powerhouse = false;
+	var contains_leader = false;
+	var minion_level_used = 0;
+	var minion_level_allow = 0;
+	var supremes = [];
+	var minions = [];
+	var faction_minions_level_allow = [];
+
+    var team = alasql("SELECT * FROM pulp_city_db.teams WHERE id='"+team_id+"'")[0];
+	var faction = alasql("SELECT * FROM factions WHERE id='"+team.faction_id+"'");
+	var members = alasql("SELECT * FROM pulp_city_db.team_members WHERE team_id = '"+team.id+"'");
+	
+	for (var member of members) {
+		var supreme = alasql("SELECT * FROM supremes WHERE id = '"+member.supreme_id+"'");
+		if(supreme[0] !== undefined) {
+			if(supreme[0].role == "POWERHOUSE") contains_powerhouse = true;
+			if(supreme[0].role == "LEADER")	contains_leader = true;			
+		    level += Number(supreme[0].level);
+			applus += supreme[0].ap_plus;
+			minion_level_allow += supreme[0].minions;
+			supreme[0].uuid=member.id;
+			supremes.push(supreme[0]);
+			var supreme_factions = alasql("SELECT * FROM supreme_factions WHERE supreme_id='"+supreme[0].id+"'");
+			for (var supreme_faction of supreme_factions) {
+			  if (faction_minions_level_allow[supreme_faction.faction_id] === undefined)
+			      faction_minions_level_allow[supreme_faction.faction_id] = supreme[0].minions;
+			  else
+			  	  faction_minions_level_allow[supreme_faction.faction_id] += supreme[0].minions;
+			}	
+		}
+		else {
+			 var minion = alasql("SELECT * FROM minions WHERE id='"+member.supreme_id+"'");
+			 if(minion[0] !== undefined) {
+				 minion_level_used += Number(minion[0].level);
+				 minion[0].uuid=member.id;
+				 minions.push(minion[0]);
+				 var minion_factions = alasql("SELECT * FROM minion_factions WHERE minion_id='"+minion[0].id+"'");
+				 for (var minion_faction of minion_factions) {
+				 	 if((minion_faction.faction_id != 'HERO') && (minion_faction.faction_id != 'VILLAIN')) {
+					     if (faction_minions_level_allow[minion_faction.faction_id] === undefined)
+			      		 	 faction_minions_level_allow[minion_faction.faction_id] = -minion[0].level;
+			  			 else
+			  	  		 	 faction_minions_level_allow[minion_faction.faction_id] -= minion[0].level;
+					 }
+				 }
+			 }
+		}	
+	}
+	if(faction[0] !== undefined) { team.faction_name = faction[0].name; } else { team.faction_name = "Undefined"; }
+	team.level =level
+	team.applus = applus;
+	team.minion_level_allow = minion_level_allow;
+	team.minion_level_used = minion_level_used;
+	team.contains_powerhouse = contains_powerhouse;
+	team.contains_leader = contains_leader;
+	team.supremes = supremes;
+	team.minions = minions;
+	team.faction_minions_level_allow = faction_minions_level_allow;
+	
+	return team;
+}
+
+jQuery(document).ready(function($){
+
+	// Add Supreme Menu
+    $("#nenuitem-new-supreme").on("click", function(){
+         $("#submenu-new-minion").hide();
+    	 $("#nenuitem-new-minion").removeClass("active");
+		 updateSupremeMenu(getTeam(current_team));
+    	 $("#submenu-new-supreme").slideToggle();
+    	 $("#nenuitem-new-supreme").toggleClass("active");
+	});
+	//Add Minion Menu
+	$("#nenuitem-new-minion").on("click", function(){
+         $("#submenu-new-supreme").hide();
+    	 $("#nenuitem-new-supreme").removeClass("active");
+		 updateMinionMenu(getTeam(current_team)); 
+		 
+		 $("#submenu-new-minion").slideToggle();
+    	 $("#nenuitem-new-minion").toggleClass("active");
+	});
+	
+	alasql.promise([
+	    'SELECT * INTO supreme_factions FROM CSV("data/supreme_factions.csv")',
+	    'SELECT * INTO factions FROM CSV("data/factions.csv")',
+		'SELECT * INTO supremes FROM CSV("data/supremes.csv")',
+	    'SELECT * INTO minions FROM CSV("data/minions.csv")',
+		'SELECT * INTO supreme_forbids FROM CSV("data/supreme_forbid.csv")',
+		'SELECT * INTO supreme_allows FROM CSV("data/supreme_allow.csv")',
+		'SELECT * INTO supreme_troopers FROM CSV("data/supreme_trooper.csv")',
+		'SELECT * INTO minion_factions FROM CSV("data/minion_factions.csv")',
+		'SELECT * INTO supreme_shifts FROM CSV("data/supreme_shifts.csv")',
+		'SELECT * INTO supreme_exclusiv_minions FROM CSV("data/supreme_exclusiv_minions.csv")'
+	]).then( function(res) {
+	    console.log('Result from last query:',res);
+		updateFactionMenu();    
+    	switchToMainView();
+    }).catch(function(reason){
+        console.log('Error:',reason)
+    });
+	
+	$("#nenuitem-new-team").on("click", function(){
+		$("#submenu-new-team").slideToggle();
+		$("#nenuitem-new-team").toggleClass("active");
+	});
+	
+	$("#back-icon-team").on("click", function(){
+		switchToMainView();
+	});
+	
+	$("#back-icon-member").on("click", function(){
+		$('#member_page').switchClass("center", "right", 1000, "easeOutExpo", function() {$('#member_page').switchClass("right", "left", 0); } );
+		$('#team_page').switchClass("left", "center", 1000, "easeOutExpo");
+	});
+	
+	$("#nenuitem-prev-member").on("click", function(){
+	    $('#member_'+current_member).removeClass("active");
+		var new_member_id = $('#member_'+current_member).prev().attr('id');
+		if (new_member_id === undefined) {
+		   new_member_id = $('#member_list li:last-child').attr('id');
+		}
+		current_member = new_member_id.replace("member_","");
+		$('#member_'+current_member).addClass("active");
+		updateCardView(current_member, current_card, current_shape);
+	});
+	
+	$("#nenuitem-next-member").on("click", function(){
+		 $('#member_'+current_member).removeClass("active");
+		var new_member_id = $('#member_'+current_member).next().attr('id');
+		if (new_member_id === undefined) {
+		   new_member_id = $('#member_list li:first-child').attr('id');
+		}
+		current_member = new_member_id.replace("member_","");
+		$('#member_'+current_member).addClass("active");
+		updateCardView(current_member, current_card, current_shape);
+	});
+	
+	$("#nenuitem-flip-member").on("click", function(){
+		if (current_card == "2") { current_card = "1"; }
+		else { if (current_card == "1") { current_card = "2"; }}
+	    updateCardView(current_member, current_card, current_shape);
+	});
+	
+	$("#nenuitem-shift-member").on("click", function(){
+		current_shape++;
+		updateCardView(current_member, current_card, current_shape);
+	});
+});
+</script>
+
+</head>
+<body>
+<div id="main">
+	<header>
+		<div id="dialog" title="Basic dialog">
+  			 <p>This is an animated dialog which is useful for displaying information. The dialog window can be moved, resized and closed with the 'x' icon.</p>
+		</div>
+	</header>
+	<div id="content">
+		 <div id="main_page" class="page center">
+		 	  <div class="main-menu">
+				   <div class="menu-items">
+				   	   <div class="menu-item" id="nenuitem-new-team">New Team</div>
+				   </div>
+			 </div>
+			 <div><div id="submenu-new-team"></div> </div>
+  		     <ul id="team_list"></ul>
+		</div>
+		<div id="team_page" class="page left">
+		     <div class="main-menu">
+			  	   <div class="menu-icon" id="back-icon-team"><img src="backicon.png" width="25" height="25" alt="" border="0"/></div>
+				   <div class="menu-items">
+				 	   <div class="menu-item" id="nenuitem-new-supreme">Add Supreme</div>
+				 	   <div class="menu-item" id="nenuitem-new-minion">Add Minion</div>
+				 	   <div class="menu-item" id="nenuitem-new-card">Add Card</div>
+				   </div>
+			 </div>
+			 <div>
+			 	 <div id="submenu-new-supreme"></div>
+    		 	 <div id="submenu-new-minion"></div>
+			 	 <div id="submenu-new-card"></div>
+			 </div>
+			 <div class="team-overview" id="team-overview" title="Team Overview"></div>
+			 <ul id="member_list"></ul>
+		</div>
+		<div id="member_page" class="page left">
+		     <div class="main-menu">
+			  	   <div class="menu-icon" id="back-icon-member"><img src="backicon.png" width="25" height="25" alt="" border="0"/></div>
+				   <div class="menu-items">
+				   	   <div class="menu-item" id="nenuitem-prev-member">Previous</div>
+					   <div class="menu-item" id="nenuitem-flip-member">Flip</div>
+					   <div class="menu-item" id="nenuitem-shift-member">Shapeshift</div>
+				 	   <div class="menu-item" id="nenuitem-next-member">Next</div>
+				   </div>
+			 </div>
+			 <div><div id="submenu-change-member"></div></div>
+			 <div class="member_card" id="member-card"></div>
+		</div>
+	</div>
+</div>
+</body>
+</html>

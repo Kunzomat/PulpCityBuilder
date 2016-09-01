@@ -1,0 +1,214 @@
+/************************************************************************************
+GENERAL
+*************************************************************************************/
+
+body {
+	font: .9em/150% Arial, Helvetica, sans-serif;
+	color: #666;
+}
+a {
+	text-decoration: none;
+	color: #39C;
+}
+h1, h2 {
+	line-height: 100%;
+	margin: 0;
+	color: #000;
+}
+header {
+	content: ""; 
+	display: table;
+    width: 100%; 
+}
+
+
+/************************************************************************************
+STRUCTURE
+*************************************************************************************/
+#content {
+    display:flex; 
+	clear: both;
+	border-top: solid 1px #ccc;
+	margin: 0; 
+    padding: 0;
+    border: 0;
+}
+
+#pulp-city-icon {
+    float: left;
+    background: black;
+    height: 28px;
+    padding: 6px 4px 4px 4px;
+}
+    
+#nenu-new-supreme { width: 90px; }
+#nenu-new-minion  { width: 75px; }
+#nenu-new-card    { width: 90px; }
+
+#submenu-new-supreme, #submenu-new-minion, #submenu-new-card { width:100%}
+    
+#nenu-new-supreme, #nenu-new-minion, #nenu-new-card {
+    font: .9em/80% Arial, Helvetica, sans-serif;
+    color: #000;
+	height: 30px;
+	background: black;
+    color: white;
+	padding: 8px 10px 0 8px;
+	cursor: pointer;
+	display: block; /* show menu icon */
+    list-style: none;
+    float: left;
+    text-align: center;
+}
+	
+#nenu-new-supreme.inactive, #nenu-new-minion.inactive, #nenu-new-card.inactive {
+	background-color: black;
+}
+   
+#nenu-new-supreme.active, #nenu-new-minion.active, #nenu-new-card.active {
+	background-color: #bbb;
+}
+    
+#dialog {
+    display: none;
+}
+    
+#member_list, #minion_list, #team_list {           /* Normalisierung */
+    list-style: none; 
+    margin: 0; 
+    padding: 0;
+    border: 0;
+}    
+#member_list ul, #minion_list ul, #team_list ul{
+    width: 10em;
+    margin: 0; 
+    padding: 0;
+    border: 1px solid black;
+}
+#member_list li, #minion_list li, #team_list li {
+        margin: 4px; 
+        padding: 4px;
+        border: 1px solid black;
+        color: black;
+    }
+#team_list li    { background-color: #60dcff; }
+#team_list li.active{ background-color: #4599b1; }
+#member_list li { background-color: #fecb09; }
+#member_list li.active { background-color: #bfb693; }
+#member_list li.error  { background-color:#fe6c09; }
+#member_list li.minion_member { background-color: #fedb7e; }
+#member_list li.minion_member.active { background-color: #bfb693; }
+    
+    .main-menu { display:flex; background:black; padding: 5px; border-left: 1px white; border-right: 1px white; margin-left: 1px; margin-right: 1px}
+    .menu-icon { display:flex; }
+    .menu-items { display:flex; justify-content:flex-end; align-items:center; width:100%; }
+    .menu-item { color: white; padding-left: 5px;padding-right: 5px ; border-left: 1px dotted white; }
+    .menu-item.active { background:#5f5e5e; }
+    
+    .supreme { display:flex; justify-content:space-between; width:100%}
+    .minion { display:flex; justify-content:space-between; width:100%}
+    
+    .seperator {border-left: 1px dotted white; }
+    
+    .faction, .supreme, .minion, .card { background:#D0D0D0; color:black; padding: 5px; border: 1px dotted white; }
+    
+    .list-item {
+        display: flex; /* or inline-flex */
+        align-items: stretch;
+    }
+    
+    .list-item-removeicon{
+        display: flex;
+        align-items: center;                          
+    }
+    
+    .list-item-desc {
+        display: flex; /* or inline-flex */
+        align-items: stretch;
+        flex-direction: column;
+    }
+    
+    .list-item-body {
+        display: flex; /* or inline-flex */
+        align-items: flex-end;
+        justify-content: space-between;
+        width: 100%;
+        padding-left: 5px;
+    }
+    
+    .list-item-level {
+        display: flex; /* or inline-flex */
+        align-items: baseline;
+    }
+    
+    .level-number {
+       padding-left: 5px;
+       font-size: 200%;
+    }
+    
+    .team-overview {
+       display: flex; /* or inline-flex */
+       align-items: stretch;
+       margin: 2px 0 2px 0; 
+       padding: 0 4px 0 4px;
+       background-color: #2f2f2f;
+       color: white;
+    }
+    
+    .team_overview-icon {
+        display: flex;
+        align-items: center; 
+    }
+    
+    .team-overview-body {
+       display: flex; /* or inline-flex */
+       align-items: flex-end;
+       justify-content: space-between;
+       width: 100%;
+       padding-left: 5px
+    }
+    
+    .team-overview-level, .team-overview-applus {
+        display: flex; /* or inline-flex */
+        justify-content: space-between;
+        align-items: baseline;
+    }
+    
+/************************************************************************************
+MOBILE
+*************************************************************************************/
+
+
+@media screen and (max-width: 600px) {
+    html,body{
+    overflow:hidden;
+    }
+
+    .page {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+ 
+    .page.left {
+        left: -100%;
+    }
+
+    .page.center {
+        left: 0;
+    }
+
+    .page.right {
+        left: 100%;
+    }
+}
+
+@media screen and (min-width: 600px) {
+    .page {
+       width: 30%;
+       min-width: 300px;
+    }
+    
+    #submenu-new-supreme, #submenu-new-minion, #submenu-new-card {width:100%}    
+}
+
