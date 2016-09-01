@@ -228,7 +228,7 @@ function updateMinionMenu(team) {
 		else var unique = true;
 		
 		var unique 
-		if((((item.level < minion_level) && is_allowed) || exclusiv) && unique) { $('#submenu-new-minion').prepend('<div id="'+item.id+'" class="minion"><div>'+item.name+'</div><div>Level '+item.level+'</div></div>'); }
+		if((((item.level <= minion_level) && is_allowed) || exclusiv) && unique) { $('#submenu-new-minion').prepend('<div id="'+item.id+'" class="minion"><div>'+item.name+'</div><div>Level '+item.level+'</div></div>'); }
 		
 	}
 	$(".minion").on("click", function(){
@@ -238,7 +238,12 @@ function updateMinionMenu(team) {
 	});
 }
 
-function updateCardMenu() {}
+function updateCardMenu() {
+	$('#submenu-new-card').empty();
+	var minions = alasql("SELECT * FROM cards ORDER BY name ASC");
+	for (item of minions) {
+	
+}
 
 
 function updateTeamList() {
@@ -353,6 +358,7 @@ jQuery(document).ready(function($){
 	});
 	//Add Minion Menu
 	$("#nenuitem-new-minion").on("click", function(){
+		$("#submenu-new-minion").hide();
          $("#submenu-new-supreme").hide();
     	 $("#nenuitem-new-supreme").removeClass("active");
 		 updateMinionMenu(getTeam(current_team)); 
@@ -360,12 +366,24 @@ jQuery(document).ready(function($){
 		 $("#submenu-new-minion").slideToggle();
     	 $("#nenuitem-new-minion").toggleClass("active");
 	});
+	//Add Card Menu
+	$("#nenuitem-new-card").on("click", function(){
+		 $("#submenu-new-minion").hide();
+         $("#submenu-new-supreme").hide();
+    	 $("#nenuitem-new-supreme").removeClass("active");
+    	 $("#nenuitem-new-minion").removeClass("active");
+		 updateCardMenu(getTeam(current_team)); 
+		 
+		 $("#submenu-new-card").slideToggle();
+    	 $("#nenuitem-new-card").toggleClass("active");
+	});
 	
 	alasql.promise([
 	    'SELECT * INTO supreme_factions FROM CSV("data/supreme_factions.csv")',
 	    'SELECT * INTO factions FROM CSV("data/factions.csv")',
 		'SELECT * INTO supremes FROM CSV("data/supremes.csv")',
 	    'SELECT * INTO minions FROM CSV("data/minions.csv")',
+	    'SELECT * INTO cards FROM CSV("data/cards.csv")',
 		'SELECT * INTO supreme_forbids FROM CSV("data/supreme_forbid.csv")',
 		'SELECT * INTO supreme_allows FROM CSV("data/supreme_allow.csv")',
 		'SELECT * INTO supreme_troopers FROM CSV("data/supreme_trooper.csv")',
@@ -440,6 +458,7 @@ jQuery(document).ready(function($){
 	<div id="content">
 		 <div id="main_page" class="page center">
 		 	  <div class="main-menu">
+		 	  	   <div class="menu-icon" id="pulpcity-logo"><img src="pulpcitylogo.jpg" width="25" height="25" alt="" border="0"/></div>
 				   <div class="menu-items">
 				   	   <div class="menu-item" id="nenuitem-new-team">New Team</div>
 				   </div>

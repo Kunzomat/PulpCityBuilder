@@ -105,12 +105,12 @@ STRUCTURE
     .menu-item { color: white; padding-left: 5px;padding-right: 5px ; border-left: 1px dotted white; }
     .menu-item.active { background:#5f5e5e; }
     
-    .supreme { display:flex; justify-content:space-between; width:100%}
-    .minion { display:flex; justify-content:space-between; width:100%}
+    .supreme { display:flex; justify-content:space-between;}
+    .minion { display:flex; justify-content:space-between;}
     
     .seperator {border-left: 1px dotted white; }
     
-    .faction, .supreme, .minion, .card { background:#D0D0D0; color:black; padding: 5px; border: 1px dotted white; }
+    .faction, .supreme, .minion, .card { background:#D0D0D0; color:black; padding-top: 5px; padding-bottom: 5px; padding-right: 10px; padding-left: 10px; border: 1px dotted white; }
     
     .list-item {
         display: flex; /* or inline-flex */
