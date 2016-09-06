@@ -11,7 +11,7 @@ alasql('CREATE TABLE supremes (id string, name string, level smallint, role stri
 alasql('CREATE TABLE factions (id string, name string)');
 alasql('CREATE TABLE supreme_forbids (supreme_id string, forbid_id string)');
 alasql('CREATE TABLE supreme_allows (supreme_id string, allow_id string)');
-alasql('CREATE TABLE supreme_troopers (supreme_id string, faction_id string)');
+alasql('CREATE TABLE supreme_troopers (supreme_id string, faction_id string, number smallint)');
 alasql('CREATE TABLE supreme_shifts (supreme_id string, shift_id string)');
 alasql('CREATE TABLE supreme_exclusiv_minions (supreme_id string, minion_id string)');
 alasql('CREATE TABLE cards (id string, name string, faction_id string)');

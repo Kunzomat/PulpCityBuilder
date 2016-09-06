@@ -151,7 +151,7 @@ function isAllowed(item_id, faction_id, members) {
 	if (count < 1) return true;
 	var troopers = alasql("SELECT * FROM supreme_troopers WHERE supreme_id = '"+item_id+"'");
 	for (trooper of troopers) {
-		if((trooper.faction_id == faction_id) && (count < 5)) return true;
+		if((trooper.faction_id == faction_id) && (count < trooper.number)) return true;
 	}
 	return false;
 }
@@ -242,7 +242,7 @@ function updateCardMenu() {
 	$('#submenu-new-card').empty();
 	var minions = alasql("SELECT * FROM cards ORDER BY name ASC");
 	for (item of minions) {
-	
+	}	
 }
 
 
@@ -358,7 +358,6 @@ jQuery(document).ready(function($){
 	});
 	//Add Minion Menu
 	$("#nenuitem-new-minion").on("click", function(){
-		$("#submenu-new-minion").hide();
          $("#submenu-new-supreme").hide();
     	 $("#nenuitem-new-supreme").removeClass("active");
 		 updateMinionMenu(getTeam(current_team)); 
@@ -366,24 +365,12 @@ jQuery(document).ready(function($){
 		 $("#submenu-new-minion").slideToggle();
     	 $("#nenuitem-new-minion").toggleClass("active");
 	});
-	//Add Card Menu
-	$("#nenuitem-new-card").on("click", function(){
-		 $("#submenu-new-minion").hide();
-         $("#submenu-new-supreme").hide();
-    	 $("#nenuitem-new-supreme").removeClass("active");
-    	 $("#nenuitem-new-minion").removeClass("active");
-		 updateCardMenu(getTeam(current_team)); 
-		 
-		 $("#submenu-new-card").slideToggle();
-    	 $("#nenuitem-new-card").toggleClass("active");
-	});
 	
 	alasql.promise([
 	    'SELECT * INTO supreme_factions FROM CSV("data/supreme_factions.csv")',
 	    'SELECT * INTO factions FROM CSV("data/factions.csv")',
 		'SELECT * INTO supremes FROM CSV("data/supremes.csv")',
 	    'SELECT * INTO minions FROM CSV("data/minions.csv")',
-	    'SELECT * INTO cards FROM CSV("data/cards.csv")',
 		'SELECT * INTO supreme_forbids FROM CSV("data/supreme_forbid.csv")',
 		'SELECT * INTO supreme_allows FROM CSV("data/supreme_allow.csv")',
 		'SELECT * INTO supreme_troopers FROM CSV("data/supreme_trooper.csv")',
