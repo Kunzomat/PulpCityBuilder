@@ -98,6 +98,12 @@ STRUCTURE
 #member_list li.error  { background-color:#fe6c09; }
 #member_list li.minion_member { background-color: #fedb7e; }
 #member_list li.minion_member.active { background-color: #bfb693; }
+#member_list li.leader_card_member { background-color: #F0B27A; }
+#member_list li.leader_card_member.active { background-color: #CA6F1E; }
+#member_list li.plot_card_member { background-color: #CC99FF; }
+#member_list li.plot_card_member.active { background-color: #A64DFF; }
+#member_list li.agenda_card_member { background-color: #9999FF; }
+#member_list li.agenda_card_member.active { background-color: #4D4DFF; }
     
     .main-menu { display:flex; background:black; padding: 5px; border-left: 1px white; border-right: 1px white; margin-left: 1px; margin-right: 1px}
     .menu-icon { display:flex; }
@@ -107,6 +113,7 @@ STRUCTURE
     
     .supreme { display:flex; justify-content:space-between;}
     .minion { display:flex; justify-content:space-between;}
+    .card { display:flex; justify-content:space-between;}
     
     .seperator {border-left: 1px dotted white; }
     

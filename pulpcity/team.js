@@ -14,4 +14,4 @@ alasql('CREATE TABLE supreme_allows (supreme_id string, allow_id string)');
 alasql('CREATE TABLE supreme_troopers (supreme_id string, faction_id string, number smallint)');
 alasql('CREATE TABLE supreme_shifts (supreme_id string, shift_id string)');
 alasql('CREATE TABLE supreme_exclusiv_minions (supreme_id string, minion_id string)');
-alasql('CREATE TABLE cards (id string, name string, faction_id string)');
+alasql('CREATE TABLE cards (id string, name string, faction_id string, supreme_id string, origin string, type string)');
